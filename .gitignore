@@ -1,0 +1,25 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# Datos e índices generados (offline, reproducibles con build_index.py)
+tarea1_rag_normativo/data/raw/*
+!tarea1_rag_normativo/data/raw/.gitkeep
+tarea1_rag_normativo/data/processed/*
+!tarea1_rag_normativo/data/processed/.gitkeep
+tarea1_rag_normativo/logs/*
+!tarea1_rag_normativo/logs/.gitkeep
+
+tarea2_radar/data/raw/*
+!tarea2_radar/data/raw/.gitkeep
+tarea2_radar/data/processed/*
+!tarea2_radar/data/processed/.gitkeep
+tarea2_radar/data/geo/*
+!tarea2_radar/data/geo/.gitkeep
+tarea2_radar/logs/*
+!tarea2_radar/logs/.gitkeep
+
+.DS_Store
+.ipynb_checkpoints/

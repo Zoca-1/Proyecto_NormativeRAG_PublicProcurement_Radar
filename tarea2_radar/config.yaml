@@ -1,0 +1,100 @@
+# Configuración única para Tarea 2 (Radar de Contrataciones).
+# Nada en src/ debe leer valores fuera de este archivo (excepto secretos, que van en .env).
+
+paths:
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  geo_dir: "data/geo"
+  fetch_state_file: "data/raw/_fetch_state.json"
+  raw_releases_file: "data/raw/releases.jsonl"
+  contracts_parquet: "data/processed/contratos.parquet"
+  risk_parquet: "data/processed/riesgo_departamento.parquet"
+  index_file: "data/processed/hybrid_index.pkl"
+  logs_dir: "logs"
+  cost_log: "logs/cost_log.csv"
+
+oece:
+  api_base_url: "https://contratacionesabiertas.oece.gob.pe/api/v1"
+  endpoint: "/releases"
+  page_size: 200
+  max_pages: null              # null = sin límite, pagina hasta agotar resultados
+  ocds_year: 2026
+  request_timeout_sec: 30
+  retry_attempts: 3
+  retry_wait_seconds: 5
+
+departamentos:
+  # Los 25 departamentos del Perú, usados como catálogo canónico de normalización territorial.
+  lista:
+    - "AMAZONAS"
+    - "ANCASH"
+    - "APURIMAC"
+    - "AREQUIPA"
+    - "AYACUCHO"
+    - "CAJAMARCA"
+    - "CALLAO"
+    - "CUSCO"
+    - "HUANCAVELICA"
+    - "HUANUCO"
+    - "ICA"
+    - "JUNIN"
+    - "LA LIBERTAD"
+    - "LAMBAYEQUE"
+    - "LIMA"
+    - "LORETO"
+    - "MADRE DE DIOS"
+    - "MOQUEGUA"
+    - "PASCO"
+    - "PIURA"
+    - "PUNO"
+    - "SAN MARTIN"
+    - "TACNA"
+    - "TUMBES"
+    - "UCAYALI"
+  alias_conocidos:
+    "LIMA METROPOLITANA": "LIMA"
+    "PROVINCIA CONSTITUCIONAL DEL CALLAO": "CALLAO"
+    "MDD": "MADRE DE DIOS"
+
+normalizacion:
+  columnas_requeridas: ["ocid", "comprador", "departamento", "monto", "fecha", "categoria"]
+  moneda_default: "PEN"
+  rejected_log_file: "data/processed/filas_rechazadas.csv"
+
+campos_texto_para_embedding: ["objeto_contratacion", "comprador", "categoria"]
+
+embeddings:
+  provider: "local"
+  local_model: "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+  openai_model: "text-embedding-3-small"
+  batch_size: 32
+
+llm:
+  provider: "anthropic"
+  model: "claude-sonnet-5"
+  max_tokens: 1024
+  temperature: 0.0
+  price_input_per_1k_usd: 0.003
+  price_output_per_1k_usd: 0.015
+  system_prompt: >
+    Eres un analista de contrataciones públicas del Perú. Responde EXCLUSIVAMENTE
+    con base en los contratos (OCID) proporcionados en el contexto, citando el OCID,
+    el departamento y el monto de cada contrato relevante. Si el contexto no sustenta
+    la respuesta, indícalo explícitamente en vez de inventar información.
+
+retrieval:
+  top_k: 8
+  similarity_threshold: 0.30
+  abstention_message: "No se encontraron contratos suficientemente relevantes en la base OCDS para responder con certeza esta pregunta. Intente ajustar los filtros o reformular la consulta."
+
+riesgo:
+  min_postores_alerta: 1
+  ventana_dias_reciente: 365
+
+geo:
+  geojson_departamentos: "data/geo/peru_departamentos.geojson"
+  geojson_id_property: "NOMBDEP"
+
+evaluation:
+  questions_file: "eval/preguntas_radar.csv"
+  results_file: "eval/resultados_radar.csv"

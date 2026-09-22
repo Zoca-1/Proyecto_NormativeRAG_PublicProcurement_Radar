@@ -1,0 +1,6 @@
+pregunta,departamento_filtro,categoria_filtro
+"¿Qué contratos de obras se adjudicaron en Loreto con un solo postor?",LORETO,works
+"¿Cuáles son los contratos de mayor monto en Lima este año?",LIMA,
+"¿Qué compras de bienes se realizaron en Cusco?",CUSCO,goods
+"¿Qué servicios se contrataron en Puno con pujador único?",PUNO,services
+"¿Cuál es el comprador con más contratos en Arequipa?",AREQUIPA,

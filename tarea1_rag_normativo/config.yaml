@@ -1,0 +1,55 @@
+# Configuración única para Tarea 1 (RAG Normativo).
+# Nada en src/ debe leer valores fuera de este archivo (excepto secretos, que van en .env).
+
+paths:
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  extracted_pages_file: "data/processed/paginas_extraidas.jsonl"
+  chunks_file: "data/processed/chunks.jsonl"
+  index_file: "data/processed/vector_index.pkl"
+  logs_dir: "logs"
+  cost_log: "logs/cost_log.csv"
+
+documents:
+  - id: "ley_32069"
+    file: "ley_32069.pdf"
+    titulo: "Ley N.° 32069, Ley General de Contrataciones Públicas"
+    version: "2024-06-18"
+  - id: "ds_001_2026_ef"
+    file: "ds_001_2026_ef.pdf"
+    titulo: "D.S. N.° 001-2026-EF, Reglamento de la Ley N.° 32069"
+    version: "2026-01-01"
+
+chunking:
+  chunk_size_tokens: 400
+  chunk_overlap_tokens: 80
+  encoding_name: "cl100k_base"
+
+embeddings:
+  provider: "local"                 # local | anthropic | openai
+  local_model: "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+  openai_model: "text-embedding-3-small"
+  batch_size: 16
+
+llm:
+  provider: "anthropic"
+  model: "claude-sonnet-5"
+  max_tokens: 1024
+  temperature: 0.0
+  price_input_per_1k_usd: 0.003
+  price_output_per_1k_usd: 0.015
+  system_prompt: >
+    Eres un asistente legal especializado en contrataciones públicas del Perú.
+    Responde EXCLUSIVAMENTE con base en los fragmentos de contexto proporcionados,
+    citando siempre el documento y la página de cada afirmación. Si el contexto
+    no sustenta la respuesta, indícalo explícitamente en vez de inventar información.
+
+retrieval:
+  top_k: 5
+  similarity_threshold: 0.35
+  abstention_message: "No cuento con evidencia suficiente en la Ley N.° 32069 ni en el D.S. N.° 001-2026-EF para responder con certeza esta pregunta. Por favor reformúlela o consulte directamente el texto normativo."
+
+evaluation:
+  questions_file: "eval/preguntas.csv"
+  results_file: "eval/resultados.csv"
+  embedding_providers_to_compare: ["local"]
