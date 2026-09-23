@@ -5,10 +5,14 @@ paths:
   raw_dir: "data/raw"
   processed_dir: "data/processed"
   geo_dir: "data/geo"
+  docs_dir: "docs"
   fetch_state_file: "data/raw/_fetch_state.json"
   raw_releases_file: "data/raw/releases.jsonl"
   contracts_parquet: "data/processed/contratos.parquet"
   risk_parquet: "data/processed/riesgo_departamento.parquet"
+  geo_metrics_parquet: "data/processed/metricas_departamento.parquet"
+  geojson_simplificado_file: "data/processed/peru_departamentos_simplificado.geojson"
+  geo_inicial_report_file: "docs/reporte_geo_inicial.md"
   index_file: "data/processed/hybrid_index.pkl"
   logs_dir: "logs"
   cost_log: "logs/cost_log.csv"
@@ -16,8 +20,14 @@ paths:
 oece:
   api_base_url: "https://contratacionesabiertas.oece.gob.pe/api/v1"
   endpoint: "/releases"
+  # Verificado contra la API real: el servidor ignora pageSize y siempre
+  # retorna un lote fijo (~20 releases) por página; el parámetro se deja
+  # documentado por si una versión futura del API lo respeta.
   page_size: 200
-  max_pages: null              # null = sin límite, pagina hasta agotar resultados
+  # 150 páginas ≈ 3000 releases: pull inicial acotado para la fase de
+  # verificación (docs/reporte_geo_inicial.md). Subir o poner en null (sin
+  # límite) para una ingesta completa de producción.
+  max_pages: 150
   ocds_year: 2026
   request_timeout_sec: 30
   retry_attempts: 3
@@ -94,6 +104,17 @@ riesgo:
 geo:
   geojson_departamentos: "data/geo/peru_departamentos.geojson"
   geojson_id_property: "NOMBDEP"
+  # Código ubigeo de departamento (INEI, 2 dígitos) tal como viene en el
+  # propio GeoJSON fuente; se usa para modelar la relación ubigeo<->métricas
+  # sin mantener un catálogo separado que se pueda desincronizar.
+  ubigeo_property: "FIRST_IDDP"
+  simplification:
+    enabled: true
+    # Tolerancia en grados decimales (el GeoJSON está en WGS84/lon-lat).
+    # ~0.01 grados ≈ 1km en el ecuador; suficiente para un mapa coroplético
+    # a nivel de departamento sin perder la forma reconocible de cada región.
+    tolerance: 0.01
+    min_points_to_simplify: 200
 
 evaluation:
   questions_file: "eval/preguntas_radar.csv"

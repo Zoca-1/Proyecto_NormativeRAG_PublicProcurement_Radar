@@ -25,3 +25,6 @@ tenacity>=8.5
 # dashboards
 streamlit>=1.37
 plotly>=5.22
+
+# geometria (validacion CRS y simplificacion de GeoJSON)
+shapely>=2.0
