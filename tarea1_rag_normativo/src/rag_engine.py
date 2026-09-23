@@ -77,7 +77,7 @@ class RagEngine:
                     "documento": c["documento_titulo"],
                     "documento_id": c["documento_id"],
                     "version": c["version"],
-                    "pagina": c["pagina"],
+                    "page_number": c["page_number"],
                     "similitud": round(c["similitud"], 4),
                 }
                 for c in candidates
@@ -112,7 +112,7 @@ class RagEngine:
 
     def _generate_answer(self, question: str, candidates: list[dict]) -> tuple[str, int, int]:
         context_blocks = [
-            f"[{c['documento_titulo']} v.{c['version']}, pág. {c['pagina']}]\n{c['texto']}"
+            f"[{c['documento_titulo']} v.{c['version']}, pág. {c['page_number']}]\n{c['texto']}"
             for c in candidates
         ]
         context = "\n\n---\n\n".join(context_blocks)

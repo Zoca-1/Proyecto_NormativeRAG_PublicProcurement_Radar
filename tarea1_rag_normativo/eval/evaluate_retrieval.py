@@ -28,7 +28,7 @@ def evaluate_provider(provider_name: str, config: dict, base_dir: Path, question
     for q in questions:
         vector = provider.embed([q["pregunta"]])[0]
         results = store.search(vector, top_k)
-        paginas_recuperadas = {(r["documento_id"], r["pagina"]) for r in results}
+        paginas_recuperadas = {(r["documento_id"], r["page_number"]) for r in results}
         esperado = (q["documento_id_esperado"], int(q["pagina_esperada"]))
         acierto = esperado in paginas_recuperadas
         top1_similitud = results[0]["similitud"] if results else 0.0

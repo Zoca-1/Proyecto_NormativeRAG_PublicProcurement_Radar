@@ -4,7 +4,10 @@
 paths:
   raw_dir: "data/raw"
   processed_dir: "data/processed"
+  docs_dir: "docs"
   extracted_pages_file: "data/processed/paginas_extraidas.jsonl"
+  cleaned_pages_file: "data/processed/paginas_limpias.jsonl"
+  extraction_report_file: "docs/reporte_extraccion.md"
   chunks_file: "data/processed/chunks.jsonl"
   index_file: "data/processed/vector_index.pkl"
   logs_dir: "logs"
@@ -12,13 +15,27 @@ paths:
 
 documents:
   - id: "ley_32069"
-    file: "ley_32069.pdf"
+    file: "LEY_32069.pdf"
     titulo: "Ley N.° 32069, Ley General de Contrataciones Públicas"
     version: "2024-06-18"
   - id: "ds_001_2026_ef"
-    file: "ds_001_2026_ef.pdf"
+    file: "DS_001_2026_EF.pdf"
     titulo: "D.S. N.° 001-2026-EF, Reglamento de la Ley N.° 32069"
     version: "2026-01-01"
+
+extraction:
+  # Detección de layout a dos columnas (formato Diario Oficial El Peruano).
+  # header_band_ratio/footer_band_ratio excluyen la cabecera/pie del análisis
+  # del gutter para que una cabecera a todo lo ancho no oculte la franja vacía
+  # real entre columnas del cuerpo de la página.
+  column_detection:
+    header_band_ratio: 0.10
+    footer_band_ratio: 0.05
+    histogram_bins: 100
+    gap_search_min_ratio: 0.30
+    gap_search_max_ratio: 0.70
+    max_density_per_bin: 1
+    min_gap_width_ratio: 0.015
 
 chunking:
   chunk_size_tokens: 400

@@ -57,7 +57,7 @@ if st.button("Consultar") and question.strip():
         st.subheader("Fuentes citadas")
         for source in result["sources"]:
             st.markdown(
-                f"- **{source['documento']}** (v.{source['version']}) — pág. {source['pagina']} "
+                f"- **{source['documento']}** (v.{source['version']}) — pág. {source['page_number']} "
                 f"· similitud {source['similitud']:.3f}"
             )
 

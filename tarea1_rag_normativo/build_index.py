@@ -33,21 +33,34 @@ def main() -> None:
 
     raw_dir = base_dir / config["paths"]["raw_dir"]
     extracted_path = base_dir / config["paths"]["extracted_pages_file"]
+    cleaned_path = base_dir / config["paths"]["cleaned_pages_file"]
     chunks_path = base_dir / config["paths"]["chunks_file"]
     index_path = base_dir / config["paths"]["index_file"]
 
     if args.force:
-        for path in (extracted_path, chunks_path, index_path):
+        for path in (extracted_path, cleaned_path, chunks_path, index_path):
             path.unlink(missing_ok=True)
 
-    new_pages = extract_documents_to_jsonl(config["documents"], raw_dir, extracted_path)
-    print(f"[1/4] Extracción de páginas: {'ok (ya existía)' if new_pages == 0 else f'{new_pages} páginas nuevas'}")
+    new_pages = extract_documents_to_jsonl(
+        config["documents"], raw_dir, extracted_path, config["extraction"]["column_detection"],
+    )
+    print(f"[1/5] Extracción de páginas: {'ok (ya existía)' if new_pages == 0 else f'{new_pages} páginas nuevas'}")
 
-    pages = load_pages_jsonl(extracted_path)
-    cleaned_pages = clean_page_records(pages)
+    if cleaned_path.exists() and not args.force:
+        print("[2/5] Limpieza: ok (ya existía)")
+    else:
+        pages = load_pages_jsonl(extracted_path)
+        cleaned_pages = clean_page_records(pages)
+        cleaned_path.parent.mkdir(parents=True, exist_ok=True)
+        with cleaned_path.open("w", encoding="utf-8") as f:
+            for page in cleaned_pages:
+                f.write(json.dumps(page, ensure_ascii=False) + "\n")
+        print(f"[2/5] Limpieza: {len(cleaned_pages)} páginas limpiadas")
+
+    cleaned_pages = load_pages_jsonl(cleaned_path)
 
     if chunks_path.exists() and not args.force:
-        print("[2/4] Chunking: ok (ya existía)")
+        print("[3/5] Chunking: ok (ya existía)")
     else:
         chunk_cfg = config["chunking"]
         chunks = chunk_pages(
@@ -57,7 +70,7 @@ def main() -> None:
         with chunks_path.open("w", encoding="utf-8") as f:
             for chunk in chunks:
                 f.write(json.dumps(chunk, ensure_ascii=False) + "\n")
-        print(f"[2/4] Chunking: {len(chunks)} fragmentos generados")
+        print(f"[3/5] Chunking: {len(chunks)} fragmentos generados")
 
     with chunks_path.open("r", encoding="utf-8") as f:
         chunks = [json.loads(line) for line in f if line.strip()]
@@ -68,14 +81,14 @@ def main() -> None:
     pending_chunks = [c for c in chunks if c["chunk_id"] not in existing_ids]
 
     if not pending_chunks:
-        print("[3/4] Embeddings: ok (índice ya actualizado)")
+        print("[4/5] Embeddings: ok (índice ya actualizado)")
     else:
         vectors = provider.embed([c["texto"] for c in pending_chunks])
         added = store.add(pending_chunks, vectors)
         store.save(index_path)
-        print(f"[3/4] Embeddings: {added} vectores nuevos agregados al índice")
+        print(f"[4/5] Embeddings: {added} vectores nuevos agregados al índice")
 
-    print(f"[4/4] Índice final: {len(store)} chunks en {index_path}")
+    print(f"[5/5] Índice final: {len(store)} chunks en {index_path}")
 
 
 if __name__ == "__main__":
