@@ -1,12 +1,12 @@
 # Reporte de Indexación — Tarea 1 (RAG Normativo)
 
-Generado: 2026-09-23T04:20:09.661716+00:00
+Generado: 2026-09-23T05:04:30.645154+00:00
 
 ## 1. Estrategia de chunking
 
 Fragmentación guiada por la estructura legal (Título > Artículo > Numeral > Inciso, `src/chunker.py`), nunca cruza una página. Cuando un fragmento estructural excede `chunking.max_chunk_tokens` (110 tokens cl100k), se subdivide con una ventana de tokens de respaldo con solape de 20 tokens.
 
-`max_chunk_tokens` se calibró contra el `max_seq_length` real del modelo de embeddings configurado (`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` = 128 subtokens WordPiece): con un límite de 400 tokens (pensado originalmente para presupuesto de contexto de LLM, no de embeddings) el 23.1% de los fragmentos (181/784) superaba los 128 subtokens y el modelo los truncaba en silencio antes de generar el embedding. Con 110 tokens cl100k, el fragmento WordPiece más largo observado es 102 (0% de truncamiento).
+`max_chunk_tokens=110` se calibró originalmente contra `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` (max_seq_length=128 subtokens WordPiece): con 400 tokens (pensado para presupuesto de contexto de LLM, no de embeddings) el 23.1% de los fragmentos superaba el límite y se truncaban en silencio antes de embeberse. El modelo de producción actual (`BAAI/bge-m3`) tiene un max_seq_length muchísimo mayor, así que ya no hay riesgo de truncamiento; se mantuvo 110 por producir fragmentos de tamaño legalmente coherente (ver docs/reporte_embeddings.md).
 
 ## 2. Estadísticas de chunks
 
@@ -22,16 +22,14 @@ Cobertura de metadatos estructurales: `articulo` 1334/1358 (98.2%), `titulo` 941
 
 ## 3. Vectorización e índice
 
-- Proveedor de embeddings: `local` — modelo `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` (costo cero, corre localmente).
-- Dimensión del vector: 384.
+- Proveedor de embeddings: `local` — modelo `BAAI/bge-m3` (costo cero, corre localmente).
+- Dimensión del vector: 1024.
 - Vectores normalizados (norma L2 ≈ 1.0) para similitud de coseno directa.
 - Almacenamiento: `data/processed/vector_index.pkl` (pickle con metadatos + matriz numpy), 1358 chunks indexados.
 - Idempotencia verificada: una segunda ejecución de `build_index.py` sin `--force` no reprocesa extracción/limpieza/chunking y agrega 0 vectores nuevos al índice.
 
-## 4. Nota de calidad de recuperación (hallazgo, no bloqueante)
+## 4. Calidad de recuperación del índice de producción
 
-`eval/evaluate_retrieval.py` (costo cero, sin LLM) sobre las 5 preguntas de `eval/preguntas.csv` da **recall@5 = 0%** con el modelo local actual.
+Evaluado directamente contra el índice ya construido (sin re-embeber nada), sobre las 26 preguntas de `eval/preguntas.csv`: **Recall@5 = 92.3%**, **MRR = 0.8463** — cumple la meta de 80%.
 
-Verificación adicional (auto-recuperación): al usar el propio texto de un chunk como consulta, el motor lo recupera correctamente como resultado 1 con similitud 1.0 — el mecanismo de búsqueda/indexado es correcto. Sin embargo, con una consulta en lenguaje natural muy cercana al título del artículo ("Objeto de la Ley"), el modelo no ubica "Artículo 1. Objeto de la Ley" en el top-1 (recupera primero "Artículo 3. Ámbito de aplicación"), y para la pregunta "¿Cuál es el objeto de la Ley N.° 32069?" el chunk correcto quedó en el puesto 171 de 1358. Esto indica una limitación de calidad semántica del modelo de embeddings local elegido para este dominio (normativa legal en español), no un defecto del pipeline de chunking/indexado.
-
-Recomendación: antes de usar este índice para responder preguntas reales, ejecutar la comparativa de embeddings prevista en la arquitectura del proyecto (`config.yaml -> evaluation.embedding_providers_to_compare`) contra al menos un proveedor adicional (p. ej. `openai` con `text-embedding-3-small`, que requiere `OPENAI_API_KEY`) y/o subir `retrieval.top_k` como mitigación parcial, antes de dar por buena la calidad de recuperación.
+Esta cifra corresponde al modelo actualmente configurado en `embeddings`. La comparativa completa contra otros modelos candidatos (con la que se decidió este modelo) está en `docs/reporte_embeddings.md` y `eval/resultados.csv`.

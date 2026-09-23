@@ -1,6 +1,79 @@
-proveedor,pregunta,acierto_recall_at_k,top1_similitud
-local,¿Cuál es el objeto de la Ley N.° 32069?,False,0.7379
-local,¿Qué principios rigen la contratación pública según la ley?,False,0.8335
-local,¿Cómo se define un procedimiento de selección según el reglamento?,False,0.8008
-local,¿Qué plazos establece el reglamento para las apelaciones?,False,0.7701
-local,¿Qué entidad supervisa el cumplimiento de la ley?,False,0.732
+proveedor,pregunta,acierto_recall_at_k,rank_del_correcto,reciprocal_rank,top1_similitud
+local_minilm_baseline,¿Cuál es el objeto de la Ley N.° 32069?,True,2,0.5,0.7379
+local_minilm_baseline,¿Cuál es la finalidad de la Ley General de Contrataciones Públicas?,False,33,0.0303,0.8312
+local_minilm_baseline,¿Cuál es el ámbito de aplicación de la Ley N.° 32069?,True,4,0.25,0.7715
+local_minilm_baseline,¿Qué implica el principio de eficacia y eficiencia en la contratación pública?,True,1,1.0,0.7936
+local_minilm_baseline,¿Qué es la gestión de riesgos en contratación pública según los enfoques de la ley?,True,1,1.0,0.8664
+local_minilm_baseline,¿Qué actores participan en el proceso de contratación pública?,True,2,0.5,0.8866
+local_minilm_baseline,¿Con qué órgano de defensa jurídica cuenta el OECE?,True,1,1.0,0.8834
+local_minilm_baseline,¿Cómo se eligen los vocales del Tribunal de Contrataciones Públicas?,True,1,1.0,0.8269
+local_minilm_baseline,¿Cuántos años de experiencia profesional se requieren para ser vocal del Tribunal de Contrataciones Públicas?,True,1,1.0,0.7738
+local_minilm_baseline,¿Cómo se organiza y estructura Perú Compras?,True,4,0.25,0.7629
+local_minilm_baseline,¿Cuáles son los recursos de Perú Compras?,True,1,1.0,0.838
+local_minilm_baseline,¿Cómo se acreditan los impedimentos para contratar con el Estado antes de la contratación?,True,2,0.5,0.7836
+local_minilm_baseline,¿Cuáles son las fases del proceso de contratación pública?,True,4,0.25,0.7934
+local_minilm_baseline,¿Qué son las modalidades abreviadas de los procedimientos de selección competitivos?,True,1,1.0,0.8724
+local_minilm_baseline,"¿Se puede usar un procedimiento no competitivo para contratar bienes y servicios de investigación, desarrollo e innovación?",True,1,1.0,0.6677
+local_minilm_baseline,¿Qué cláusulas obligatorias deben incluir los contratos regulados por la Ley N.° 32069?,True,1,1.0,0.886
+local_minilm_baseline,¿Pueden modificarse los contratos de contrataciones públicas después de celebrados?,True,1,1.0,0.7541
+local_minilm_baseline,¿Para qué finalidad puede la entidad contratante entregar adelantos al contratista?,True,1,1.0,0.8677
+local_minilm_baseline,¿Por qué causales puede declararse la nulidad de actos procedimentales en una contratación pública?,False,38,0.0263,0.7544
+local_minilm_baseline,¿Cuándo es nulo un contrato por incumplir el procedimiento de selección correspondiente?,False,15,0.0667,0.7549
+local_minilm_baseline,¿Cuál es el monto de la garantía por interposición del recurso de apelación?,True,1,1.0,0.8385
+local_minilm_baseline,¿Qué ocurre si la entidad contratante no resuelve el recurso de apelación dentro del plazo establecido?,True,5,0.2,0.8267
+local_minilm_baseline,¿Qué pretensiones no pueden someterse a arbitraje según la Ley N.° 32069?,False,40,0.025,0.7358
+local_minilm_baseline,¿Quién sanciona a los proveedores por infracciones administrativas en las contrataciones públicas?,False,9,0.1111,0.8152
+local_minilm_baseline,¿Dónde se publica el Decreto Supremo N.° 001-2026-EF y su anexo?,True,4,0.25,0.7504
+local_minilm_baseline,¿Quién refrenda el Decreto Supremo N.° 001-2026-EF?,False,49,0.0204,0.697
+local_multilingual_e5_base,¿Cuál es el objeto de la Ley N.° 32069?,False,16,0.0625,0.8541
+local_multilingual_e5_base,¿Cuál es la finalidad de la Ley General de Contrataciones Públicas?,True,3,0.3333,0.8743
+local_multilingual_e5_base,¿Cuál es el ámbito de aplicación de la Ley N.° 32069?,False,19,0.0526,0.8454
+local_multilingual_e5_base,¿Qué implica el principio de eficacia y eficiencia en la contratación pública?,True,1,1.0,0.881
+local_multilingual_e5_base,¿Qué es la gestión de riesgos en contratación pública según los enfoques de la ley?,True,1,1.0,0.8967
+local_multilingual_e5_base,¿Qué actores participan en el proceso de contratación pública?,True,1,1.0,0.906
+local_multilingual_e5_base,¿Con qué órgano de defensa jurídica cuenta el OECE?,True,1,1.0,0.9021
+local_multilingual_e5_base,¿Cómo se eligen los vocales del Tribunal de Contrataciones Públicas?,True,1,1.0,0.9101
+local_multilingual_e5_base,¿Cuántos años de experiencia profesional se requieren para ser vocal del Tribunal de Contrataciones Públicas?,True,1,1.0,0.9106
+local_multilingual_e5_base,¿Cómo se organiza y estructura Perú Compras?,True,1,1.0,0.8893
+local_multilingual_e5_base,¿Cuáles son los recursos de Perú Compras?,True,1,1.0,0.8995
+local_multilingual_e5_base,¿Cómo se acreditan los impedimentos para contratar con el Estado antes de la contratación?,True,1,1.0,0.8999
+local_multilingual_e5_base,¿Cuáles son las fases del proceso de contratación pública?,True,1,1.0,0.8978
+local_multilingual_e5_base,¿Qué son las modalidades abreviadas de los procedimientos de selección competitivos?,True,1,1.0,0.8805
+local_multilingual_e5_base,"¿Se puede usar un procedimiento no competitivo para contratar bienes y servicios de investigación, desarrollo e innovación?",True,4,0.25,0.8645
+local_multilingual_e5_base,¿Qué cláusulas obligatorias deben incluir los contratos regulados por la Ley N.° 32069?,True,1,1.0,0.8726
+local_multilingual_e5_base,¿Pueden modificarse los contratos de contrataciones públicas después de celebrados?,True,1,1.0,0.854
+local_multilingual_e5_base,¿Para qué finalidad puede la entidad contratante entregar adelantos al contratista?,True,1,1.0,0.9172
+local_multilingual_e5_base,¿Por qué causales puede declararse la nulidad de actos procedimentales en una contratación pública?,False,9,0.1111,0.8736
+local_multilingual_e5_base,¿Cuándo es nulo un contrato por incumplir el procedimiento de selección correspondiente?,True,2,0.5,0.8671
+local_multilingual_e5_base,¿Cuál es el monto de la garantía por interposición del recurso de apelación?,True,1,1.0,0.8944
+local_multilingual_e5_base,¿Qué ocurre si la entidad contratante no resuelve el recurso de apelación dentro del plazo establecido?,True,1,1.0,0.873
+local_multilingual_e5_base,¿Qué pretensiones no pueden someterse a arbitraje según la Ley N.° 32069?,True,1,1.0,0.8653
+local_multilingual_e5_base,¿Quién sanciona a los proveedores por infracciones administrativas en las contrataciones públicas?,True,1,1.0,0.8714
+local_multilingual_e5_base,¿Dónde se publica el Decreto Supremo N.° 001-2026-EF y su anexo?,False,8,0.125,0.8538
+local_multilingual_e5_base,¿Quién refrenda el Decreto Supremo N.° 001-2026-EF?,True,2,0.5,0.8429
+local_bge_m3,¿Cuál es el objeto de la Ley N.° 32069?,False,14,0.0714,0.6149
+local_bge_m3,¿Cuál es la finalidad de la Ley General de Contrataciones Públicas?,True,1,1.0,0.639
+local_bge_m3,¿Cuál es el ámbito de aplicación de la Ley N.° 32069?,False,10,0.1,0.5841
+local_bge_m3,¿Qué implica el principio de eficacia y eficiencia en la contratación pública?,True,1,1.0,0.6702
+local_bge_m3,¿Qué es la gestión de riesgos en contratación pública según los enfoques de la ley?,True,1,1.0,0.6892
+local_bge_m3,¿Qué actores participan en el proceso de contratación pública?,True,1,1.0,0.7627
+local_bge_m3,¿Con qué órgano de defensa jurídica cuenta el OECE?,True,1,1.0,0.6876
+local_bge_m3,¿Cómo se eligen los vocales del Tribunal de Contrataciones Públicas?,True,1,1.0,0.7674
+local_bge_m3,¿Cuántos años de experiencia profesional se requieren para ser vocal del Tribunal de Contrataciones Públicas?,True,1,1.0,0.6941
+local_bge_m3,¿Cómo se organiza y estructura Perú Compras?,True,1,1.0,0.7614
+local_bge_m3,¿Cuáles son los recursos de Perú Compras?,True,1,1.0,0.6996
+local_bge_m3,¿Cómo se acreditan los impedimentos para contratar con el Estado antes de la contratación?,True,1,1.0,0.749
+local_bge_m3,¿Cuáles son las fases del proceso de contratación pública?,True,1,1.0,0.7086
+local_bge_m3,¿Qué son las modalidades abreviadas de los procedimientos de selección competitivos?,True,1,1.0,0.6684
+local_bge_m3,"¿Se puede usar un procedimiento no competitivo para contratar bienes y servicios de investigación, desarrollo e innovación?",True,1,1.0,0.7178
+local_bge_m3,¿Qué cláusulas obligatorias deben incluir los contratos regulados por la Ley N.° 32069?,True,1,1.0,0.6533
+local_bge_m3,¿Pueden modificarse los contratos de contrataciones públicas después de celebrados?,True,1,1.0,0.6951
+local_bge_m3,¿Para qué finalidad puede la entidad contratante entregar adelantos al contratista?,True,1,1.0,0.8061
+local_bge_m3,¿Por qué causales puede declararse la nulidad de actos procedimentales en una contratación pública?,True,2,0.5,0.6417
+local_bge_m3,¿Cuándo es nulo un contrato por incumplir el procedimiento de selección correspondiente?,True,1,1.0,0.6953
+local_bge_m3,¿Cuál es el monto de la garantía por interposición del recurso de apelación?,True,1,1.0,0.7546
+local_bge_m3,¿Qué ocurre si la entidad contratante no resuelve el recurso de apelación dentro del plazo establecido?,True,1,1.0,0.6915
+local_bge_m3,¿Qué pretensiones no pueden someterse a arbitraje según la Ley N.° 32069?,True,1,1.0,0.6225
+local_bge_m3,¿Quién sanciona a los proveedores por infracciones administrativas en las contrataciones públicas?,True,2,0.5,0.6765
+local_bge_m3,¿Dónde se publica el Decreto Supremo N.° 001-2026-EF y su anexo?,True,3,0.3333,0.6332
+local_bge_m3,¿Quién refrenda el Decreto Supremo N.° 001-2026-EF?,True,2,0.5,0.5778

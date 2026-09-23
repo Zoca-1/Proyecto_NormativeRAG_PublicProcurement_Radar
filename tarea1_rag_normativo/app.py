@@ -53,6 +53,8 @@ if st.button("Consultar") and question.strip():
             st.warning(result["answer"])
         else:
             st.markdown(result["answer"])
+            if result.get("citations_verified") is False:
+                st.caption("⚠️ No se detectó una cita explícita de artículo/página en el texto de la respuesta.")
 
         st.subheader("Fuentes citadas")
         for source in result["sources"]:

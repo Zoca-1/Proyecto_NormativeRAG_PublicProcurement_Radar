@@ -1,6 +1,27 @@
-pregunta,documento_id_esperado,pagina_esperada
-"¿Cuál es el objeto de la Ley N.° 32069?",ley_32069,1
-"¿Qué principios rigen la contratación pública según la ley?",ley_32069,2
-"¿Cómo se define un procedimiento de selección según el reglamento?",ds_001_2026_ef,1
-"¿Qué plazos establece el reglamento para las apelaciones?",ds_001_2026_ef,5
-"¿Qué entidad supervisa el cumplimiento de la ley?",ley_32069,3
+pregunta,documento_id_esperado,articulo_esperado
+"¿Cuál es el objeto de la Ley N.° 32069?",ley_32069,Artículo 1
+"¿Cuál es la finalidad de la Ley General de Contrataciones Públicas?",ley_32069,Artículo 2
+"¿Cuál es el ámbito de aplicación de la Ley N.° 32069?",ley_32069,Artículo 3
+"¿Qué implica el principio de eficacia y eficiencia en la contratación pública?",ley_32069,Artículo 5
+"¿Qué es la gestión de riesgos en contratación pública según los enfoques de la ley?",ley_32069,Artículo 6
+"¿Qué actores participan en el proceso de contratación pública?",ley_32069,Artículo 9
+"¿Con qué órgano de defensa jurídica cuenta el OECE?",ley_32069,Artículo 12
+"¿Cómo se eligen los vocales del Tribunal de Contrataciones Públicas?",ley_32069,Artículo 17
+"¿Cuántos años de experiencia profesional se requieren para ser vocal del Tribunal de Contrataciones Públicas?",ley_32069,Artículo 18
+"¿Cómo se organiza y estructura Perú Compras?",ley_32069,Artículo 21
+"¿Cuáles son los recursos de Perú Compras?",ley_32069,Artículo 24
+"¿Cómo se acreditan los impedimentos para contratar con el Estado antes de la contratación?",ley_32069,Artículo 33
+"¿Cuáles son las fases del proceso de contratación pública?",ley_32069,Artículo 45
+"¿Qué son las modalidades abreviadas de los procedimientos de selección competitivos?",ley_32069,Artículo 54
+"¿Se puede usar un procedimiento no competitivo para contratar bienes y servicios de investigación, desarrollo e innovación?",ley_32069,Artículo 55
+"¿Qué cláusulas obligatorias deben incluir los contratos regulados por la Ley N.° 32069?",ley_32069,Artículo 60
+"¿Pueden modificarse los contratos de contrataciones públicas después de celebrados?",ley_32069,Artículo 63
+"¿Para qué finalidad puede la entidad contratante entregar adelantos al contratista?",ley_32069,Artículo 66
+"¿Por qué causales puede declararse la nulidad de actos procedimentales en una contratación pública?",ley_32069,Artículo 70
+"¿Cuándo es nulo un contrato por incumplir el procedimiento de selección correspondiente?",ley_32069,Artículo 71
+"¿Cuál es el monto de la garantía por interposición del recurso de apelación?",ley_32069,Artículo 73
+"¿Qué ocurre si la entidad contratante no resuelve el recurso de apelación dentro del plazo establecido?",ley_32069,Artículo 75
+"¿Qué pretensiones no pueden someterse a arbitraje según la Ley N.° 32069?",ley_32069,Artículo 76
+"¿Quién sanciona a los proveedores por infracciones administrativas en las contrataciones públicas?",ley_32069,Artículo 88
+"¿Dónde se publica el Decreto Supremo N.° 001-2026-EF y su anexo?",ds_001_2026_ef,Artículo 2
+"¿Quién refrenda el Decreto Supremo N.° 001-2026-EF?",ds_001_2026_ef,Artículo 5

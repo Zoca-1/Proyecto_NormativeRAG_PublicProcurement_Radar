@@ -10,6 +10,7 @@
 ├── .gitignore
 ├── tarea1_rag_normativo/
 │   ├── config.yaml
+│   ├── source_check.py
 │   ├── build_index.py
 │   ├── app.py
 │   ├── src/
@@ -22,7 +23,12 @@
 │   │   └── logger_cost.py
 │   ├── eval/
 │   │   ├── preguntas.csv
-│   │   └── evaluate_retrieval.py
+│   │   ├── evaluate_retrieval.py
+│   │   └── resultados.csv
+│   ├── docs/
+│   │   ├── reporte_extraccion.md
+│   │   ├── reporte_indexacion.md
+│   │   └── reporte_embeddings.md
 │   ├── data/{raw,processed}/
 │   └── logs/
 ├── tarea2_radar/
@@ -47,15 +53,21 @@
 
 ```mermaid
 flowchart LR
-    A[PDFs en data/raw] --> B[pdf_extractor: texto por pagina]
-    B --> C[text_cleaner: limpieza por pagina]
-    C --> D[chunker: fragmentos por tokens]
+    A[PDFs en data/raw] --> B[pdf_extractor: texto por pagina, columnas corregidas]
+    B --> C[text_cleaner: cabecera El Peruano, codigo editorial]
+    C --> D[chunker: Titulo > Articulo > Numeral > Inciso]
     D --> E[embeddings: vector por fragmento]
     E --> F[vector_store: indice persistido]
+    F --> G[reporte_indexacion.md]
 ```
 
-`build_index.py` ejecuta A→F de forma idempotente: cada etapa se salta si su
-artefacto ya existe (`--force` fuerza reconstrucción completa).
+`source_check.py` cubre A→C (inspección de fuentes, extracción, limpieza,
+`docs/reporte_extraccion.md`). `build_index.py` cubre A→G de forma idempotente
+(cada etapa se salta si su artefacto ya existe; `--force` fuerza reconstrucción
+completa) y termina corriendo `eval/evaluate_retrieval.py` para incluir
+Recall@k en el reporte. La fragmentación nunca cruza una página: un artículo
+que continúa en la página siguiente genera fragmentos separados que heredan
+la etiqueta de título/artículo vigente (estado secuencial por documento).
 
 ## Tarea 1 — flujo online
 
@@ -64,12 +76,17 @@ flowchart LR
     Q[Pregunta del usuario] --> R[rag_engine.query]
     R --> S{similitud maxima >= umbral?}
     S -- no --> T[abstained=true, sin llamar al LLM]
-    S -- si --> U[Llamada al LLM con contexto citado]
-    U --> V[Respuesta + fuentes documento/pagina/version]
-    V --> W[logger_cost: logs/cost_log.csv]
+    S -- si --> U[LLM con contexto citado por articulo/numeral/inciso/pagina]
+    U --> V{Respuesta cita articulo+pagina?}
+    V -- no --> X[Reintento con recordatorio de cita]
+    V -- si --> W[logger_cost: logs/cost_log.csv]
+    X --> W
 ```
 
-`app.py` (Streamlit) solo invoca `rag_engine.query()`; nunca reconstruye el índice.
+`app.py` (Streamlit) solo invoca `rag_engine.query()`; nunca reconstruye el
+índice. `query()` retorna `citations_verified` para que la UI (o cualquier
+consumidor) sepa si la respuesta final quedó con cita explícita de
+artículo+página, en vez de confiar ciegamente en la instrucción del prompt.
 
 ## Tarea 2 — flujo offline
 

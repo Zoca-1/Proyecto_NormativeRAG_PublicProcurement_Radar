@@ -47,39 +47,67 @@ chunking:
   # artículo o inciso con una lista extensa) excede el tamaño manejable; en
   # ese caso se subdivide con una ventana de tokens con solape.
   #
-  # max_chunk_tokens=110 se calibró empíricamente contra el tokenizer real del
-  # modelo de embeddings configurado abajo (embeddings.local_model), cuyo
-  # max_seq_length es 128 subtokens WordPiece: con el valor previo (400,
-  # pensado para presupuesto de contexto de LLM) el 23.1% de los fragmentos
-  # (181/784) superaba los 128 subtokens y el modelo los truncaba en
-  # silencio antes de generar el embedding, perdiendo el contenido posterior
-  # al corte en la similitud de recuperación. Con 110 tokens cl100k, el
-  # fragmento WordPiece más largo observado es 102 (0% de truncamiento).
-  # Si se cambia embeddings.local_model por uno con otro max_seq_length,
-  # recalibrar este valor contra su tokenizer real antes de reindexar.
+  # max_chunk_tokens=110 se calibró originalmente contra el tokenizer real de
+  # sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2 (max_seq_length
+  # de 128 subtokens WordPiece): con 400 (pensado para presupuesto de contexto
+  # de LLM, no de embeddings) el 23.1% de los fragmentos superaba los 128
+  # subtokens y el modelo los truncaba en silencio antes de generar el
+  # embedding. El modelo de producción actual (BAAI/bge-m3, ver
+  # embeddings.local_model) tiene max_seq_length=8192, muy por encima de 110
+  # tokens cl100k, así que ya no hay riesgo de truncamiento con ningún
+  # artículo/numeral/inciso real de estos documentos; se mantiene 110 porque
+  # sigue produciendo fragmentos de tamaño legalmente coherente. Si se cambia
+  # embeddings.local_model por uno con un max_seq_length más bajo, recalibrar
+  # este valor contra su tokenizer real antes de reindexar.
   max_chunk_tokens: 110
   token_fallback_overlap_tokens: 20
   encoding_name: "cl100k_base"
 
 embeddings:
-  provider: "local"                 # local | anthropic | openai
-  local_model: "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+  # Ver eval/resultados.csv y docs/reporte_embeddings.md para la comparativa
+  # que decide estos valores; query_prefix/passage_prefix son obligatorios
+  # para modelos E5 (intfloat/multilingual-e5-*), que rinden mal sin ellos.
+  # BAAI/bge-m3 ganó la comparativa (Recall@5=92.3%, MRR=0.846, meta >=80%)
+  # frente al baseline MiniLM (76.9%/0.576) y a multilingual-e5-base
+  # (84.6%/0.767); no requiere prefijos para este resultado. dim=1024,
+  # max_seq_length=8192 (muy por encima de chunking.max_chunk_tokens=110,
+  # sin riesgo de truncamiento).
+  provider: "local"                 # local | openai
+  local_model: "BAAI/bge-m3"
   openai_model: "text-embedding-3-small"
+  query_prefix: ""
+  passage_prefix: ""
   batch_size: 16
 
 llm:
   provider: "anthropic"
   model: "claude-sonnet-5"
   max_tokens: 1024
+  # No se envía a la API: el SDK anthropic instalado (1.6.0) no expone un
+  # parámetro temperature en Messages.create (verificado con
+  # inspect.signature). Se deja documentado por si una versión futura del
+  # SDK lo reincorpora.
   temperature: 0.0
   price_input_per_1k_usd: 0.003
   price_output_per_1k_usd: 0.015
   system_prompt: >
     Eres un asistente legal especializado en contrataciones públicas del Perú.
-    Responde EXCLUSIVAMENTE con base en los fragmentos de contexto proporcionados,
-    citando siempre el documento, la página y, cuando el fragmento lo indique,
-    el artículo/numeral/inciso exacto de cada afirmación. Si el contexto no
-    sustenta la respuesta, indícalo explícitamente en vez de inventar información.
+    Responde EXCLUSIVAMENTE con base en los fragmentos de contexto proporcionados.
+    Cada fragmento de contexto trae entre corchetes su cita completa (documento,
+    página y, cuando aplica, título/artículo/numeral/inciso). Para CADA afirmación
+    de tu respuesta debes citar entre paréntesis, inmediatamente después, al menos
+    el artículo y la página de origen, agregando numeral/inciso cuando el
+    fragmento los indique. Ejemplo de formato: "El objeto de la ley es
+    establecer el marco normativo de contrataciones (Artículo 1, pág. 1)."
+    No agrupes todas las citas al final: cita junto a cada afirmación. Si el
+    contexto no sustenta la respuesta, indícalo explícitamente en vez de
+    inventar información o inventar una cita.
+  citation_retry_message: >
+    Tu respuesta anterior no incluyó una cita explícita de artículo y página
+    para alguna afirmación. Reescribe la respuesta completa citando, entre
+    paréntesis y junto a cada afirmación, el artículo y la página exactos del
+    fragmento de contexto que la sustenta (agrega numeral/inciso cuando el
+    fragmento los indique). No agregues información nueva.
 
 retrieval:
   top_k: 5
@@ -89,4 +117,26 @@ retrieval:
 evaluation:
   questions_file: "eval/preguntas.csv"
   results_file: "eval/resultados.csv"
-  embedding_providers_to_compare: ["local"]
+  target_recall_at_k: 0.80
+  # Candidatos para la comparativa de embeddings (eval/evaluate_retrieval.py).
+  # text-embedding-3-small (OpenAI) se dejó fuera porque OPENAI_API_KEY no
+  # está configurado en este entorno; en su lugar se comparan dos modelos
+  # multilingües locales de mayor capacidad que el baseline (costo cero).
+  # Los modelos E5 se entrenaron con los prefijos "query: "/"passage: " y
+  # rinden notablemente peor sin ellos, por eso son parte de cada candidato.
+  embedding_candidates:
+    - name: "local_minilm_baseline"
+      provider: "local"
+      model: "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+      query_prefix: ""
+      passage_prefix: ""
+    - name: "local_multilingual_e5_base"
+      provider: "local"
+      model: "intfloat/multilingual-e5-base"
+      query_prefix: "query: "
+      passage_prefix: "passage: "
+    - name: "local_bge_m3"
+      provider: "local"
+      model: "BAAI/bge-m3"
+      query_prefix: ""
+      passage_prefix: ""

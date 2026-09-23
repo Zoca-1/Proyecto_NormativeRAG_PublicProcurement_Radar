@@ -1,11 +1,12 @@
 """Motor RAG normativo. NO debe importar streamlit, telegram ni ninguna librería de UI.
 
 Expone query(question, filters=None) -> dict con: answer, sources, abstained,
-tokens_in, tokens_out, cost_usd, latency_sec, error.
+tokens_in, tokens_out, cost_usd, latency_sec, error, citations_verified.
 """
 from __future__ import annotations
 
 import os
+import re
 import time
 from pathlib import Path
 
@@ -18,6 +19,13 @@ from .vector_store import VectorStore
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 ENV_PATH = BASE_DIR.parent / ".env"
+
+_CITATION_ARTICULO_PATTERN = re.compile(r"art[íi]culo\s+\d+|art\.\s*\d+", re.IGNORECASE)
+_CITATION_PAGE_PATTERN = re.compile(r"p[áa]g\.?\s*\d+|p[áa]gina\s+\d+", re.IGNORECASE)
+
+
+def _has_explicit_citation(answer_text: str) -> bool:
+    return bool(_CITATION_ARTICULO_PATTERN.search(answer_text)) and bool(_CITATION_PAGE_PATTERN.search(answer_text))
 
 
 def load_config(config_path: Path | None = None) -> dict:
@@ -53,7 +61,7 @@ class RagEngine:
         result = {
             "answer": None, "sources": [], "abstained": False,
             "tokens_in": 0, "tokens_out": 0, "cost_usd": 0.0,
-            "latency_sec": 0.0, "error": None,
+            "latency_sec": 0.0, "error": None, "citations_verified": None,
         }
         try:
             if len(self.store) == 0:
@@ -61,7 +69,7 @@ class RagEngine:
                     "El índice está vacío. Ejecuta build_index.py antes de iniciar la aplicación."
                 )
 
-            query_vector = self.embedding_provider.embed([question])[0]
+            query_vector = self.embedding_provider.embed_query(question)
             retrieval_cfg = self.config["retrieval"]
             top_k = retrieval_cfg["top_k"]
             candidates = self.store.search(query_vector, top_k * 3 if filters else top_k)
@@ -95,7 +103,8 @@ class RagEngine:
                 log_query_cost(_resolve_path(self.config, "cost_log"), question, True, 0, 0, 0.0, result["latency_sec"])
                 return result
 
-            answer, tokens_in, tokens_out = self._generate_answer(question, candidates)
+            answer, tokens_in, tokens_out, citations_verified = self._generate_answer(question, candidates)
+            result["citations_verified"] = citations_verified
             llm_cfg = self.config["llm"]
             cost_usd = compute_cost_usd(
                 tokens_in, tokens_out, llm_cfg["price_input_per_1k_usd"], llm_cfg["price_output_per_1k_usd"],
@@ -115,7 +124,12 @@ class RagEngine:
             result["latency_sec"] = time.monotonic() - start
             return result
 
-    def _generate_answer(self, question: str, candidates: list[dict]) -> tuple[str, int, int]:
+    def _generate_answer(self, question: str, candidates: list[dict]) -> tuple[str, int, int, bool]:
+        """Genera la respuesta y VERIFICA que cite artículo+página de forma
+        explícita (no confía ciegamente en que el LLM siga la instrucción del
+        system prompt): si falta, reintenta una vez con un recordatorio
+        explícito antes de devolver la respuesta final.
+        """
         context_blocks = [
             f"[{c['documento_titulo']} v.{c['version']}, pág. {c['page_number']}"
             + (f", {c['titulo']}" if c.get("titulo") else "")
@@ -127,20 +141,35 @@ class RagEngine:
         ]
         context = "\n\n---\n\n".join(context_blocks)
         llm_cfg = self.config["llm"]
-
         client = self._get_llm_client()
+
+        # El SDK anthropic instalado (1.6.0) no expone "temperature" en
+        # Messages.create (ver firma real vía inspect.signature); llm.temperature
+        # queda en config.yaml como intención documentada pero no se envía a la
+        # API para no romper la llamada en esta versión del SDK.
+        messages = [{"role": "user", "content": f"Contexto:\n\n{context}\n\nPregunta: {question}"}]
         response = client.messages.create(
-            model=llm_cfg["model"],
-            max_tokens=llm_cfg["max_tokens"],
-            temperature=llm_cfg["temperature"],
-            system=llm_cfg["system_prompt"],
-            messages=[{
-                "role": "user",
-                "content": f"Contexto:\n\n{context}\n\nPregunta: {question}",
-            }],
+            model=llm_cfg["model"], max_tokens=llm_cfg["max_tokens"],
+            system=llm_cfg["system_prompt"], messages=messages,
         )
         answer_text = "".join(block.text for block in response.content if block.type == "text")
-        return answer_text, response.usage.input_tokens, response.usage.output_tokens
+        tokens_in = response.usage.input_tokens
+        tokens_out = response.usage.output_tokens
+
+        if _has_explicit_citation(answer_text):
+            return answer_text, tokens_in, tokens_out, True
+
+        messages.append({"role": "assistant", "content": answer_text})
+        messages.append({"role": "user", "content": llm_cfg["citation_retry_message"]})
+        retry_response = client.messages.create(
+            model=llm_cfg["model"], max_tokens=llm_cfg["max_tokens"],
+            system=llm_cfg["system_prompt"], messages=messages,
+        )
+        retry_text = "".join(block.text for block in retry_response.content if block.type == "text")
+        tokens_in += retry_response.usage.input_tokens
+        tokens_out += retry_response.usage.output_tokens
+
+        return retry_text, tokens_in, tokens_out, _has_explicit_citation(retry_text)
 
 
 def query(question: str, filters: dict | None = None) -> dict:

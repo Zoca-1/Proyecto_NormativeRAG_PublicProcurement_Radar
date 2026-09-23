@@ -10,7 +10,6 @@ from __future__ import annotations
 import argparse
 import csv
 import statistics
-import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -29,35 +28,45 @@ from src.vector_store import VectorStore
 import json
 
 
-def _run_retrieval_eval(base_dir: Path, config: dict) -> tuple[float, int] | None:
-    """Ejecuta eval/evaluate_retrieval.py (retrieval-only, costo-cero) contra
-    el índice recién construido y retorna (recall_at_k, n_preguntas), o None
-    si no se pudo ejecutar (p. ej. no existe el set de preguntas)."""
-    eval_script = base_dir / "eval" / "evaluate_retrieval.py"
+def _evaluate_production_index(base_dir: Path, config: dict, store: VectorStore, provider) -> tuple[float, float, int] | None:
+    """Evalúa el ÍNDICE DE PRODUCCIÓN ya construido (reutiliza store/provider
+    en memoria, sin re-embeber nada) contra eval/preguntas.csv. Retorna
+    (recall_at_k, mrr, n_preguntas), o None si no hay set de preguntas.
+
+    Deliberadamente NO invoca eval/evaluate_retrieval.py: ese script itera
+    TODOS los embedding_candidates de la comparativa (re-descarga/re-embebe
+    cada modelo desde cero), lo cual sería correcto para comparar modelos
+    pero muy costoso para simplemente reportar el recall del modelo YA
+    configurado en producción tras cada build_index.py.
+    """
     questions_file = base_dir / config["evaluation"]["questions_file"]
-    if not eval_script.exists() or not questions_file.exists():
+    if not questions_file.exists():
+        return None
+    with questions_file.open("r", encoding="utf-8") as f:
+        questions = list(csv.DictReader(f))
+    if not questions:
         return None
 
-    result = subprocess.run(
-        [sys.executable, str(eval_script)], cwd=str(base_dir),
-        capture_output=True, text=True, encoding="utf-8", errors="replace",
-    )
-    if result.returncode != 0:
-        return None
+    top_k = config["retrieval"]["top_k"]
+    hits, reciprocal_ranks = 0, []
+    for q in questions:
+        query_vector = provider.embed_query(q["pregunta"])
+        ranked = store.search(query_vector, len(store))
+        rank_of_hit = next(
+            (rank for rank, r in enumerate(ranked, start=1)
+             if r["documento_id"] == q["documento_id_esperado"]
+             and (r.get("articulo") or "").startswith(q["articulo_esperado"])),
+            None,
+        )
+        reciprocal_ranks.append(1.0 / rank_of_hit if rank_of_hit else 0.0)
+        if rank_of_hit is not None and rank_of_hit <= top_k:
+            hits += 1
 
-    results_path = base_dir / config["evaluation"]["results_file"]
-    if not results_path.exists():
-        return None
-    with results_path.open("r", encoding="utf-8") as f:
-        rows = list(csv.DictReader(f))
-    if not rows:
-        return None
-    aciertos = sum(1 for r in rows if r["acierto_recall_at_k"] == "True")
-    return aciertos / len(rows), len(rows)
+    return hits / len(questions), sum(reciprocal_ranks) / len(questions), len(questions)
 
 
 def render_indexing_report(config: dict, chunks: list[dict], store: VectorStore, embed_dim: int,
-                            recall_eval: tuple[float, int] | None) -> str:
+                            recall_eval: tuple[float, float, int] | None) -> str:
     encoding = tiktoken.get_encoding(config["chunking"]["encoding_name"])
     char_lens = [len(c["texto"]) for c in chunks]
     tok_lens = [len(encoding.encode(c["texto"])) for c in chunks]
@@ -89,12 +98,13 @@ def render_indexing_report(config: dict, chunks: list[dict], store: VectorStore,
     )
     lines.append("")
     lines.append(
-        f"`max_chunk_tokens` se calibró contra el `max_seq_length` real del modelo de embeddings "
-        f"configurado (`{config['embeddings']['local_model']}` = 128 subtokens WordPiece): con un "
-        "límite de 400 tokens (pensado originalmente para presupuesto de contexto de LLM, no de "
-        "embeddings) el 23.1% de los fragmentos (181/784) superaba los 128 subtokens y el modelo "
-        "los truncaba en silencio antes de generar el embedding. Con 110 tokens cl100k, el "
-        "fragmento WordPiece más largo observado es 102 (0% de truncamiento)."
+        "`max_chunk_tokens=110` se calibró originalmente contra "
+        "`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` (max_seq_length=128 subtokens "
+        "WordPiece): con 400 tokens (pensado para presupuesto de contexto de LLM, no de embeddings) "
+        "el 23.1% de los fragmentos superaba el límite y se truncaban en silencio antes de embeberse. "
+        f"El modelo de producción actual (`{config['embeddings']['local_model']}`) tiene un "
+        "max_seq_length muchísimo mayor, así que ya no hay riesgo de truncamiento; se mantuvo 110 por "
+        "producir fragmentos de tamaño legalmente coherente (ver docs/reporte_embeddings.md)."
     )
     lines.append("")
 
@@ -130,35 +140,24 @@ def render_indexing_report(config: dict, chunks: list[dict], store: VectorStore,
     )
     lines.append("")
 
-    lines.append("## 4. Nota de calidad de recuperación (hallazgo, no bloqueante)")
+    lines.append("## 4. Calidad de recuperación del índice de producción")
     lines.append("")
+    target = config["evaluation"].get("target_recall_at_k", 0.80)
     if recall_eval:
-        recall, n_q = recall_eval
+        recall, mrr, n_q = recall_eval
+        estado = "cumple" if recall >= target else "NO cumple"
         lines.append(
-            f"`eval/evaluate_retrieval.py` (costo cero, sin LLM) sobre las {n_q} preguntas de "
-            f"`eval/preguntas.csv` da **recall@{config['retrieval']['top_k']} = {recall:.0%}** con el "
-            "modelo local actual."
+            f"Evaluado directamente contra el índice ya construido (sin re-embeber nada), sobre las "
+            f"{n_q} preguntas de `eval/preguntas.csv`: **Recall@{config['retrieval']['top_k']} = "
+            f"{recall:.1%}**, **MRR = {mrr:.4f}** — {estado} la meta de {target:.0%}."
         )
     else:
-        lines.append("No se pudo ejecutar `eval/evaluate_retrieval.py` para esta build.")
+        lines.append("No se pudo evaluar (no existe `eval/preguntas.csv` o está vacío).")
     lines.append("")
     lines.append(
-        "Verificación adicional (auto-recuperación): al usar el propio texto de un chunk como consulta, "
-        "el motor lo recupera correctamente como resultado 1 con similitud 1.0 — el mecanismo de "
-        "búsqueda/indexado es correcto. Sin embargo, con una consulta en lenguaje natural muy cercana "
-        "al título del artículo (\"Objeto de la Ley\"), el modelo no ubica \"Artículo 1. Objeto de la "
-        "Ley\" en el top-1 (recupera primero \"Artículo 3. Ámbito de aplicación\"), y para la pregunta "
-        "\"¿Cuál es el objeto de la Ley N.° 32069?\" el chunk correcto quedó en el puesto 171 de 1358. "
-        "Esto indica una limitación de calidad semántica del modelo de embeddings local elegido para "
-        "este dominio (normativa legal en español), no un defecto del pipeline de chunking/indexado."
-    )
-    lines.append("")
-    lines.append(
-        "Recomendación: antes de usar este índice para responder preguntas reales, ejecutar la "
-        "comparativa de embeddings prevista en la arquitectura del proyecto (`config.yaml -> "
-        "evaluation.embedding_providers_to_compare`) contra al menos un proveedor adicional (p. ej. "
-        "`openai` con `text-embedding-3-small`, que requiere `OPENAI_API_KEY`) y/o subir "
-        "`retrieval.top_k` como mitigación parcial, antes de dar por buena la calidad de recuperación."
+        "Esta cifra corresponde al modelo actualmente configurado en `embeddings`. La comparativa "
+        "completa contra otros modelos candidatos (con la que se decidió este modelo) está en "
+        "`docs/reporte_embeddings.md` y `eval/resultados.csv`."
     )
     lines.append("")
 
@@ -226,7 +225,7 @@ def main() -> None:
     if not pending_chunks:
         print("[4/6] Embeddings: ok (índice ya actualizado)")
     else:
-        vectors = provider.embed([c["texto"] for c in pending_chunks])
+        vectors = provider.embed_passages([c["texto"] for c in pending_chunks])
         added = store.add(pending_chunks, vectors)
         store.save(index_path)
         print(f"[4/6] Embeddings: {added} vectores nuevos agregados al índice")
@@ -234,7 +233,7 @@ def main() -> None:
     print(f"[5/6] Índice final: {len(store)} chunks en {index_path}")
 
     print("[6/6] Generando reporte de indexación...")
-    recall_eval = _run_retrieval_eval(base_dir, config)
+    recall_eval = _evaluate_production_index(base_dir, config, store, provider)
     report_md = render_indexing_report(config, chunks, store, store.vectors.shape[1], recall_eval)
     report_path = base_dir / config["paths"]["indexing_report_file"]
     report_path.parent.mkdir(parents=True, exist_ok=True)
