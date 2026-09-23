@@ -8,6 +8,7 @@ paths:
   extracted_pages_file: "data/processed/paginas_extraidas.jsonl"
   cleaned_pages_file: "data/processed/paginas_limpias.jsonl"
   extraction_report_file: "docs/reporte_extraccion.md"
+  indexing_report_file: "docs/reporte_indexacion.md"
   chunks_file: "data/processed/chunks.jsonl"
   index_file: "data/processed/vector_index.pkl"
   logs_dir: "logs"
@@ -18,10 +19,12 @@ documents:
     file: "LEY_32069.pdf"
     titulo: "Ley N.° 32069, Ley General de Contrataciones Públicas"
     version: "2024-06-18"
+    ley_ds: "LEY"
   - id: "ds_001_2026_ef"
     file: "DS_001_2026_EF.pdf"
     titulo: "D.S. N.° 001-2026-EF, Reglamento de la Ley N.° 32069"
     version: "2026-01-01"
+    ley_ds: "DS"
 
 extraction:
   # Detección de layout a dos columnas (formato Diario Oficial El Peruano).
@@ -38,8 +41,24 @@ extraction:
     min_gap_width_ratio: 0.015
 
 chunking:
-  chunk_size_tokens: 400
-  chunk_overlap_tokens: 80
+  # Fragmentación guiada por estructura legal (Título > Artículo > Numeral >
+  # Inciso, ver src/chunker.py). max_chunk_tokens/token_fallback_overlap_tokens
+  # solo se usan como red de seguridad si un fragmento estructural (p. ej. un
+  # artículo o inciso con una lista extensa) excede el tamaño manejable; en
+  # ese caso se subdivide con una ventana de tokens con solape.
+  #
+  # max_chunk_tokens=110 se calibró empíricamente contra el tokenizer real del
+  # modelo de embeddings configurado abajo (embeddings.local_model), cuyo
+  # max_seq_length es 128 subtokens WordPiece: con el valor previo (400,
+  # pensado para presupuesto de contexto de LLM) el 23.1% de los fragmentos
+  # (181/784) superaba los 128 subtokens y el modelo los truncaba en
+  # silencio antes de generar el embedding, perdiendo el contenido posterior
+  # al corte en la similitud de recuperación. Con 110 tokens cl100k, el
+  # fragmento WordPiece más largo observado es 102 (0% de truncamiento).
+  # Si se cambia embeddings.local_model por uno con otro max_seq_length,
+  # recalibrar este valor contra su tokenizer real antes de reindexar.
+  max_chunk_tokens: 110
+  token_fallback_overlap_tokens: 20
   encoding_name: "cl100k_base"
 
 embeddings:
@@ -58,8 +77,9 @@ llm:
   system_prompt: >
     Eres un asistente legal especializado en contrataciones públicas del Perú.
     Responde EXCLUSIVAMENTE con base en los fragmentos de contexto proporcionados,
-    citando siempre el documento y la página de cada afirmación. Si el contexto
-    no sustenta la respuesta, indícalo explícitamente en vez de inventar información.
+    citando siempre el documento, la página y, cuando el fragmento lo indique,
+    el artículo/numeral/inciso exacto de cada afirmación. Si el contexto no
+    sustenta la respuesta, indícalo explícitamente en vez de inventar información.
 
 retrieval:
   top_k: 5

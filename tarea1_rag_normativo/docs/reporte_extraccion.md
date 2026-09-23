@@ -1,6 +1,6 @@
 # Reporte de Calidad de Extracción — Tarea 1 (RAG Normativo)
 
-Generado: 2026-09-22T23:49:36.983541+00:00
+Generado: 2026-09-23T04:08:33.571690+00:00
 
 ## 1. Inspección y verificación de fuentes (source_check)
 

@@ -103,7 +103,7 @@ def extract_page_text(page, column_cfg: dict) -> tuple[str, bool]:
     return text, True
 
 
-def extract_pages(pdf_path: Path, documento_id: str, titulo: str, version: str, column_cfg: dict) -> Iterator[dict]:
+def extract_pages(pdf_path: Path, documento_id: str, titulo: str, version: str, ley_ds: str, column_cfg: dict) -> Iterator[dict]:
     with pdfplumber.open(pdf_path) as pdf:
         for page_number, page in enumerate(pdf.pages, start=1):
             texto, es_dos_columnas = extract_page_text(page, column_cfg)
@@ -111,6 +111,7 @@ def extract_pages(pdf_path: Path, documento_id: str, titulo: str, version: str, 
                 "documento_id": documento_id,
                 "documento_titulo": titulo,
                 "version": version,
+                "ley_ds": ley_ds,
                 "page_number": page_number,
                 "es_dos_columnas": es_dos_columnas,
                 "texto": texto,
@@ -131,7 +132,7 @@ def extract_documents_to_jsonl(documents: list[dict], raw_dir: Path, output_path
                 raise FileNotFoundError(
                     f"No se encontró '{pdf_path}'. Coloca el PDF declarado en config.yaml -> documents."
                 )
-            for page_record in extract_pages(pdf_path, doc["id"], doc["titulo"], doc["version"], column_cfg):
+            for page_record in extract_pages(pdf_path, doc["id"], doc["titulo"], doc["version"], doc["ley_ds"], column_cfg):
                 f.write(json.dumps(page_record, ensure_ascii=False) + "\n")
                 total_pages += 1
     return total_pages

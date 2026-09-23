@@ -76,8 +76,13 @@ class RagEngine:
                 {
                     "documento": c["documento_titulo"],
                     "documento_id": c["documento_id"],
+                    "ley_ds": c.get("ley_ds"),
                     "version": c["version"],
                     "page_number": c["page_number"],
+                    "titulo": c.get("titulo"),
+                    "articulo": c.get("articulo"),
+                    "numeral": c.get("numeral"),
+                    "inciso": c.get("inciso"),
                     "similitud": round(c["similitud"], 4),
                 }
                 for c in candidates
@@ -112,7 +117,12 @@ class RagEngine:
 
     def _generate_answer(self, question: str, candidates: list[dict]) -> tuple[str, int, int]:
         context_blocks = [
-            f"[{c['documento_titulo']} v.{c['version']}, pág. {c['page_number']}]\n{c['texto']}"
+            f"[{c['documento_titulo']} v.{c['version']}, pág. {c['page_number']}"
+            + (f", {c['titulo']}" if c.get("titulo") else "")
+            + (f", {c['articulo']}" if c.get("articulo") else "")
+            + (f", numeral {c['numeral']}" if c.get("numeral") else "")
+            + (f", inciso {c['inciso']}" if c.get("inciso") else "")
+            + f"]\n{c['texto']}"
             for c in candidates
         ]
         context = "\n\n---\n\n".join(context_blocks)

@@ -1,0 +1,6 @@
+proveedor,pregunta,acierto_recall_at_k,top1_similitud
+local,¿Cuál es el objeto de la Ley N.° 32069?,False,0.7379
+local,¿Qué principios rigen la contratación pública según la ley?,False,0.8335
+local,¿Cómo se define un procedimiento de selección según el reglamento?,False,0.8008
+local,¿Qué plazos establece el reglamento para las apelaciones?,False,0.7701
+local,¿Qué entidad supervisa el cumplimiento de la ley?,False,0.732

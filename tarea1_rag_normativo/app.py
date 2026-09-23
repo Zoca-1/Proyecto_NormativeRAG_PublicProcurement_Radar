@@ -56,9 +56,15 @@ if st.button("Consultar") and question.strip():
 
         st.subheader("Fuentes citadas")
         for source in result["sources"]:
+            detalle = " · ".join(
+                filter(None, [source.get("titulo"), source.get("articulo"),
+                              f"numeral {source['numeral']}" if source.get("numeral") else None,
+                              f"inciso {source['inciso']}" if source.get("inciso") else None])
+            )
             st.markdown(
-                f"- **{source['documento']}** (v.{source['version']}) — pág. {source['page_number']} "
-                f"· similitud {source['similitud']:.3f}"
+                f"- **{source['documento']}** (v.{source['version']}) — pág. {source['page_number']}"
+                + (f" — {detalle}" if detalle else "")
+                + f" · similitud {source['similitud']:.3f}"
             )
 
         col1, col2, col3 = st.columns(3)
