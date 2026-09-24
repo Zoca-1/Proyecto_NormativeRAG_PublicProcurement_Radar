@@ -136,7 +136,7 @@ with tab_mapa:
             hover_columns=["numero_procesos", "numero_proveedores_unicos", "numero_entidades_unicas"],
             color_scale="Blues",
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
 with tab_riesgo:
     if geojson_data is None or risk_df.empty:
@@ -151,10 +151,10 @@ with tab_riesgo:
             hover_columns=["total_contratos", "contratos_pujador_unico", "monto_total"],
             color_scale="Reds",
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
 with tab_tabla:
     st.subheader("Métricas por departamento")
-    st.dataframe(geo_metrics_df, use_container_width=True)
+    st.dataframe(geo_metrics_df, width='stretch')
     st.subheader("Indicador de riesgo (pujador único) por departamento")
-    st.dataframe(risk_df, use_container_width=True)
+    st.dataframe(risk_df, width='stretch')

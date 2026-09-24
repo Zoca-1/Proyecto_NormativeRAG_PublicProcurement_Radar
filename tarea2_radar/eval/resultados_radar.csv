@@ -1,0 +1,26 @@
+pregunta,departamento_filtro,candidatos_tras_filtro,top1_similitud,supera_umbral
+¿Qué contrataciones de bienes se registraron en Amazonas?,AMAZONAS,12,0.5543,True
+¿Qué contrataciones de servicios se registraron en Ancash?,ANCASH,69,0.5231,True
+¿Qué contrataciones de bienes se registraron en Apurimac?,APURIMAC,66,0.5767,True
+¿Qué contrataciones de servicios se registraron en Arequipa?,AREQUIPA,67,0.5709,True
+¿Qué contrataciones de bienes se registraron en Ayacucho?,AYACUCHO,37,0.537,True
+¿Qué contrataciones de servicios se registraron en Cajamarca?,CAJAMARCA,55,0.6242,True
+¿Qué contrataciones de bienes se registraron en Callao?,CALLAO,34,0.531,True
+¿Qué contrataciones de bienes se registraron en Cusco?,CUSCO,141,0.5238,True
+¿Qué contrataciones de servicios se registraron en Huancavelica?,HUANCAVELICA,30,0.589,True
+¿Qué contrataciones de bienes se registraron en Huanuco?,HUANUCO,31,0.6483,True
+¿Qué contrataciones de servicios se registraron en Ica?,ICA,31,0.5183,True
+¿Qué contrataciones de servicios se registraron en Junin?,JUNIN,47,0.4456,True
+¿Qué contrataciones de servicios se registraron en La Libertad?,LA LIBERTAD,52,0.4898,True
+¿Qué contrataciones de servicios se registraron en Lambayeque?,LAMBAYEQUE,44,0.5463,True
+¿Qué contrataciones de servicios se registraron en Lima?,LIMA,454,0.6932,True
+¿Qué contrataciones de servicios se registraron en Loreto?,LORETO,22,0.3946,True
+¿Qué contrataciones de bienes se registraron en Madre De Dios?,MADRE DE DIOS,26,0.5326,True
+¿Qué contrataciones de bienes se registraron en Moquegua?,MOQUEGUA,40,0.5997,True
+¿Qué contrataciones de obras se registraron en Pasco?,PASCO,19,0.4892,True
+¿Qué contrataciones de servicios se registraron en Piura?,PIURA,37,0.5322,True
+¿Qué contrataciones de bienes se registraron en Puno?,PUNO,111,0.5974,True
+¿Qué contrataciones de servicios se registraron en San Martin?,SAN MARTIN,28,0.5874,True
+¿Qué contrataciones de bienes se registraron en Tacna?,TACNA,21,0.578,True
+¿Qué contrataciones de obras se registraron en Tumbes?,TUMBES,6,0.4511,True
+¿Qué contrataciones de servicios se registraron en Ucayali?,UCAYALI,31,0.5986,True

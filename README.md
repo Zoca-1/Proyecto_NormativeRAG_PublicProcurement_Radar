@@ -19,7 +19,7 @@ Dos herramientas RAG sobre contrataciones públicas en Perú:
 python -m venv .venv
 .venv\Scripts\activate        # Windows
 pip install -r requirements.txt
-copy .env.example .env        # completar ANTHROPIC_API_KEY, etc.
+copy .env.example .env        # completar GEMINI_API_KEY (Tarea 1), ANTHROPIC_API_KEY (Tarea 2), etc.
 ```
 
 ## Tarea 1 — RAG Normativo

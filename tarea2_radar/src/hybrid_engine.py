@@ -180,11 +180,13 @@ class HybridEngine:
         context = "\n\n---\n\n".join(context_blocks)
         llm_cfg = self.config["llm"]
 
+        # El SDK anthropic instalado (1.6.0) no expone "temperature" en
+        # Messages.create (mismo hallazgo que en tarea1_rag_normativo/src/rag_engine.py);
+        # llm.temperature queda en config.yaml documentado pero no se envía.
         client = self._get_llm_client()
         response = client.messages.create(
             model=llm_cfg["model"],
             max_tokens=llm_cfg["max_tokens"],
-            temperature=llm_cfg["temperature"],
             system=llm_cfg["system_prompt"],
             messages=[{
                 "role": "user",

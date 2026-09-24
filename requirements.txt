@@ -13,7 +13,8 @@ tiktoken>=0.7
 sentence-transformers>=3.0
 
 # LLM generativo
-anthropic>=0.34
+anthropic>=0.34          # tarea2_radar/src/hybrid_engine.py
+google-genai>=1.0        # tarea1_rag_normativo/src/rag_engine.py (Gemini, API gratuita)
 
 # opcional: embeddings/LLM via OpenAI (solo si se configura en config.yaml)
 openai>=1.40

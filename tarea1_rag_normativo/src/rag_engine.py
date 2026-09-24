@@ -49,11 +49,11 @@ class RagEngine:
 
     def _get_llm_client(self):
         if self._llm_client is None:
-            import anthropic
-            api_key = os.environ.get("ANTHROPIC_API_KEY")
+            from google import genai
+            api_key = os.environ.get("GEMINI_API_KEY")
             if not api_key:
-                raise RuntimeError("ANTHROPIC_API_KEY no está definido en .env")
-            self._llm_client = anthropic.Anthropic(api_key=api_key)
+                raise RuntimeError("GEMINI_API_KEY no está definido en .env")
+            self._llm_client = genai.Client(api_key=api_key)
         return self._llm_client
 
     def query(self, question: str, filters: dict | None = None) -> dict:
@@ -142,34 +142,44 @@ class RagEngine:
         context = "\n\n---\n\n".join(context_blocks)
         llm_cfg = self.config["llm"]
         client = self._get_llm_client()
+        generation_config = self._build_generation_config(llm_cfg)
 
-        # El SDK anthropic instalado (1.6.0) no expone "temperature" en
-        # Messages.create (ver firma real vía inspect.signature); llm.temperature
-        # queda en config.yaml como intención documentada pero no se envía a la
-        # API para no romper la llamada en esta versión del SDK.
-        messages = [{"role": "user", "content": f"Contexto:\n\n{context}\n\nPregunta: {question}"}]
-        response = client.messages.create(
-            model=llm_cfg["model"], max_tokens=llm_cfg["max_tokens"],
-            system=llm_cfg["system_prompt"], messages=messages,
-        )
-        answer_text = "".join(block.text for block in response.content if block.type == "text")
-        tokens_in = response.usage.input_tokens
-        tokens_out = response.usage.output_tokens
+        contents = [{"role": "user", "parts": [{"text": f"Contexto:\n\n{context}\n\nPregunta: {question}"}]}]
+        response = client.models.generate_content(model=llm_cfg["model"], contents=contents, config=generation_config)
+        answer_text, tokens_in, tokens_out = self._extract_text_and_usage(response)
 
         if _has_explicit_citation(answer_text):
             return answer_text, tokens_in, tokens_out, True
 
-        messages.append({"role": "assistant", "content": answer_text})
-        messages.append({"role": "user", "content": llm_cfg["citation_retry_message"]})
-        retry_response = client.messages.create(
-            model=llm_cfg["model"], max_tokens=llm_cfg["max_tokens"],
-            system=llm_cfg["system_prompt"], messages=messages,
-        )
-        retry_text = "".join(block.text for block in retry_response.content if block.type == "text")
-        tokens_in += retry_response.usage.input_tokens
-        tokens_out += retry_response.usage.output_tokens
+        contents.append({"role": "model", "parts": [{"text": answer_text}]})
+        contents.append({"role": "user", "parts": [{"text": llm_cfg["citation_retry_message"]}]})
+        retry_response = client.models.generate_content(model=llm_cfg["model"], contents=contents, config=generation_config)
+        retry_text, retry_tokens_in, retry_tokens_out = self._extract_text_and_usage(retry_response)
+        tokens_in += retry_tokens_in
+        tokens_out += retry_tokens_out
 
         return retry_text, tokens_in, tokens_out, _has_explicit_citation(retry_text)
+
+    @staticmethod
+    def _build_generation_config(llm_cfg: dict):
+        from google.genai import types
+        return types.GenerateContentConfig(
+            system_instruction=llm_cfg["system_prompt"],
+            max_output_tokens=llm_cfg["max_tokens"],
+            temperature=llm_cfg["temperature"],
+            # Sin esto, gemini-3.6-flash puede gastar casi todo max_output_tokens
+            # "pensando" y truncar la respuesta visible a media frase (medido en
+            # vivo). thinking_budget=0 fuerza una respuesta directa y completa.
+            thinking_config=types.ThinkingConfig(thinking_budget=llm_cfg.get("thinking_budget", 0)),
+        )
+
+    @staticmethod
+    def _extract_text_and_usage(response) -> tuple[str, int, int]:
+        text = response.text or ""
+        usage = response.usage_metadata
+        tokens_in = usage.prompt_token_count or 0
+        tokens_out = usage.candidates_token_count or 0
+        return text, tokens_in, tokens_out
 
 
 def query(question: str, filters: dict | None = None) -> dict:

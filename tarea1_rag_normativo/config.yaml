@@ -80,16 +80,26 @@ embeddings:
   batch_size: 16
 
 llm:
-  provider: "anthropic"
-  model: "claude-sonnet-5"
+  # Se migró de Anthropic a Gemini (API gratuita) — ver src/rag_engine.py.
+  # gemini-2.5-flash y gemini-1.5-flash (sugeridos originalmente) ya no están
+  # disponibles: la API real (verificada en vivo) los retorna 404 y remite a
+  # gemini-3.6-flash, que es el modelo configurado aquí.
+  provider: "gemini"
+  model: "gemini-3.6-flash"
   max_tokens: 1024
-  # No se envía a la API: el SDK anthropic instalado (1.6.0) no expone un
-  # parámetro temperature en Messages.create (verificado con
-  # inspect.signature). Se deja documentado por si una versión futura del
-  # SDK lo reincorpora.
   temperature: 0.0
-  price_input_per_1k_usd: 0.003
-  price_output_per_1k_usd: 0.015
+  # gemini-3.6-flash trae "thinking" activado por defecto, que puede consumir
+  # casi todo max_tokens en deliberación interna y truncar la respuesta visible
+  # a media frase (medido en vivo: 191 de 200 tokens en pensamiento, respuesta
+  # cortada). thinking_budget=0 lo desactiva para respuestas directas y
+  # completas, apropiado para citar normativa con precisión.
+  thinking_budget: 0
+  # Nivel gratuito de la API de Gemini: costo 0 dentro de los límites de tasa
+  # del tier gratuito. Si se pasa a un plan de pago, actualizar estos valores
+  # con el precio real por token de gemini-3.6-flash para que el costeo en
+  # logs/cost_log.csv siga siendo significativo.
+  price_input_per_1k_usd: 0.0
+  price_output_per_1k_usd: 0.0
   system_prompt: >
     Eres un asistente legal especializado en contrataciones públicas del Perú.
     Responde EXCLUSIVAMENTE con base en los fragmentos de contexto proporcionados.

@@ -83,6 +83,9 @@ llm:
   provider: "anthropic"
   model: "claude-sonnet-5"
   max_tokens: 1024
+  # No se envía a la API: el SDK anthropic instalado (1.6.0) no expone un
+  # parámetro temperature en Messages.create (verificado con
+  # inspect.signature, igual que en tarea1_rag_normativo).
   temperature: 0.0
   price_input_per_1k_usd: 0.003
   price_output_per_1k_usd: 0.015

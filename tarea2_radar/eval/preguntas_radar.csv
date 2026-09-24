@@ -1,6 +1,26 @@
 pregunta,departamento_filtro,categoria_filtro
-"¿Qué contratos de obras se adjudicaron en Loreto con un solo postor?",LORETO,works
-"¿Cuáles son los contratos de mayor monto en Lima este año?",LIMA,
-"¿Qué compras de bienes se realizaron en Cusco?",CUSCO,goods
-"¿Qué servicios se contrataron en Puno con pujador único?",PUNO,services
-"¿Cuál es el comprador con más contratos en Arequipa?",AREQUIPA,
+¿Qué contrataciones de bienes se registraron en Amazonas?,AMAZONAS,goods
+¿Qué contrataciones de servicios se registraron en Ancash?,ANCASH,services
+¿Qué contrataciones de bienes se registraron en Apurimac?,APURIMAC,goods
+¿Qué contrataciones de servicios se registraron en Arequipa?,AREQUIPA,services
+¿Qué contrataciones de bienes se registraron en Ayacucho?,AYACUCHO,goods
+¿Qué contrataciones de servicios se registraron en Cajamarca?,CAJAMARCA,services
+¿Qué contrataciones de bienes se registraron en Callao?,CALLAO,goods
+¿Qué contrataciones de bienes se registraron en Cusco?,CUSCO,goods
+¿Qué contrataciones de servicios se registraron en Huancavelica?,HUANCAVELICA,services
+¿Qué contrataciones de bienes se registraron en Huanuco?,HUANUCO,goods
+¿Qué contrataciones de servicios se registraron en Ica?,ICA,services
+¿Qué contrataciones de servicios se registraron en Junin?,JUNIN,services
+¿Qué contrataciones de servicios se registraron en La Libertad?,LA LIBERTAD,services
+¿Qué contrataciones de servicios se registraron en Lambayeque?,LAMBAYEQUE,services
+¿Qué contrataciones de servicios se registraron en Lima?,LIMA,services
+¿Qué contrataciones de servicios se registraron en Loreto?,LORETO,services
+¿Qué contrataciones de bienes se registraron en Madre De Dios?,MADRE DE DIOS,goods
+¿Qué contrataciones de bienes se registraron en Moquegua?,MOQUEGUA,goods
+¿Qué contrataciones de obras se registraron en Pasco?,PASCO,works
+¿Qué contrataciones de servicios se registraron en Piura?,PIURA,services
+¿Qué contrataciones de bienes se registraron en Puno?,PUNO,goods
+¿Qué contrataciones de servicios se registraron en San Martin?,SAN MARTIN,services
+¿Qué contrataciones de bienes se registraron en Tacna?,TACNA,goods
+¿Qué contrataciones de obras se registraron en Tumbes?,TUMBES,works
+¿Qué contrataciones de servicios se registraron en Ucayali?,UCAYALI,services
