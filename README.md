@@ -68,3 +68,15 @@ No debe imprimir ninguna coincidencia.
 ## Estructura
 
 Ver el árbol completo en `docs/pipeline.md`, que además documenta el flujo offline/online de ambas tareas.
+
+## 📹 Video de Demostración y Presentación Técnica
+
+El video explicativo de 12 minutos (que cubre la arquitectura *pipeline-first*, decisiones técnicas, demostración en vivo de ambas aplicaciones y el desglose de costos) se encuentra disponible en Google Drive:
+
+👉 **[Ver Video de Demostración del Proyecto en Google Drive](https://drive.google.com/drive/u/1/folders/1ZTR5nS8BYiUhD-MUT9DNTFSRQx8O8Azn)**
+
+
+
+
+
+
